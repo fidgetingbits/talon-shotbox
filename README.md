@@ -29,6 +29,6 @@ TBD
     - [ ] Allow flushing both caches
     - [ ] Make current window selection seamless, it doesn't show the original selection at first
     - [ ] Make mouse snapping go to this center of the mouse?
-    - [ ] Add snap functionality
     - [ ] Add mouse dragging?
     - [ ] Make the command configurable in lists
+    - [ ] Don't allow moving box off screen. If it hits the edge and user keeps trying, maybe flash red or something?
