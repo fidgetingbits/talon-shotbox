@@ -15,6 +15,10 @@ mod.tag("shotbox_enabled", desc="Tag enables shotbox commands.")
 mod.list("points_of_compass", desc="Point of compass for shotbox")
 mod.list("box_multipliers", desc="Multipliers for growing/shrinking the box")
 mod.list("box_dimensions", desc="Box dimensions for multiplication")
+mod.list(
+    "shotbox_snap_positions",
+    "Predefined window positions for the box. See `RelativeScreenPos`.",
+)
 mod.mode("shotbox", desc="Indicate shotbox is active")
 
 setting_grow_size = mod.setting(
@@ -97,6 +101,83 @@ direction_name_steps = [
     "north",
     "north east",
 ]
+
+
+# These snap positions are duplicated from snap_windows.py in the talon_community repo. I don't import them,
+# because not everyone uses the community repo, and I don't want to force them to install it.
+class RelativeScreenPos:
+    """Represents a window position as a fraction of the screen."""
+
+    def __init__(self, left, top, right, bottom):
+        self.left = left
+        self.top = top
+        self.bottom = bottom
+        self.right = right
+
+
+_snap_positions = {
+    # Halves
+    # .---.---.     .-------.
+    # |   |   |  &  |-------|
+    # '---'---'     '-------'
+    "left": RelativeScreenPos(0, 0, 0.5, 1),
+    "right": RelativeScreenPos(0.5, 0, 1, 1),
+    "top": RelativeScreenPos(0, 0, 1, 0.5),
+    "bottom": RelativeScreenPos(0, 0.5, 1, 1),
+    # Thirds
+    # .--.--.--.
+    # |  |  |  |
+    # '--'--'--'
+    "center third": RelativeScreenPos(1 / 3, 0, 2 / 3, 1),
+    "left third": RelativeScreenPos(0, 0, 1 / 3, 1),
+    "right third": RelativeScreenPos(2 / 3, 0, 1, 1),
+    "left two thirds": RelativeScreenPos(0, 0, 2 / 3, 1),
+    "right two thirds": RelativeScreenPos(1 / 3, 0, 1, 1),
+    # Alternate (simpler) spoken forms for thirds
+    "center small": RelativeScreenPos(1 / 3, 0, 2 / 3, 1),
+    "left small": RelativeScreenPos(0, 0, 1 / 3, 1),
+    "right small": RelativeScreenPos(2 / 3, 0, 1, 1),
+    "left large": RelativeScreenPos(0, 0, 2 / 3, 1),
+    "right large": RelativeScreenPos(1 / 3, 0, 1, 1),
+    # Quarters
+    # .---.---.
+    # |---|---|
+    # '---'---'
+    "top left": RelativeScreenPos(0, 0, 0.5, 0.5),
+    "top right": RelativeScreenPos(0.5, 0, 1, 0.5),
+    "bottom left": RelativeScreenPos(0, 0.5, 0.5, 1),
+    "bottom right": RelativeScreenPos(0.5, 0.5, 1, 1),
+    # Sixths
+    # .--.--.--.
+    # |--|--|--|
+    # '--'--'--'
+    "top left third": RelativeScreenPos(0, 0, 1 / 3, 0.5),
+    "top right third": RelativeScreenPos(2 / 3, 0, 1, 0.5),
+    "top left two thirds": RelativeScreenPos(0, 0, 2 / 3, 0.5),
+    "top right two thirds": RelativeScreenPos(1 / 3, 0, 1, 0.5),
+    "top center third": RelativeScreenPos(1 / 3, 0, 2 / 3, 0.5),
+    "bottom left third": RelativeScreenPos(0, 0.5, 1 / 3, 1),
+    "bottom right third": RelativeScreenPos(2 / 3, 0.5, 1, 1),
+    "bottom left two thirds": RelativeScreenPos(0, 0.5, 2 / 3, 1),
+    "bottom right two thirds": RelativeScreenPos(1 / 3, 0.5, 1, 1),
+    "bottom center third": RelativeScreenPos(1 / 3, 0.5, 2 / 3, 1),
+    # Alternate (simpler) spoken forms for sixths
+    "top left small": RelativeScreenPos(0, 0, 1 / 3, 0.5),
+    "top right small": RelativeScreenPos(2 / 3, 0, 1, 0.5),
+    "top left large": RelativeScreenPos(0, 0, 2 / 3, 0.5),
+    "top right large": RelativeScreenPos(1 / 3, 0, 1, 0.5),
+    "top center small": RelativeScreenPos(1 / 3, 0, 2 / 3, 0.5),
+    "bottom left small": RelativeScreenPos(0, 0.5, 1 / 3, 1),
+    "bottom right small": RelativeScreenPos(2 / 3, 0.5, 1, 1),
+    "bottom left large": RelativeScreenPos(0, 0.5, 2 / 3, 1),
+    "bottom right large": RelativeScreenPos(1 / 3, 0.5, 1, 1),
+    "bottom center small": RelativeScreenPos(1 / 3, 0.5, 2 / 3, 1),
+    # Special
+    "center": RelativeScreenPos(1 / 8, 1 / 6, 7 / 8, 5 / 6),
+    "full": RelativeScreenPos(0, 0, 1, 1),
+    "fullscreen": RelativeScreenPos(0, 0, 1, 1),
+}
+ctx.lists["user.shotbox_snap_positions"] = _snap_positions.keys()
 
 arrow_name_steps = ["right", "down", "left", "up"]
 
@@ -721,6 +802,11 @@ def shotbox_mode_disable():
     actions.mode.enable("command")
 
 
+@mod.capture(rule="{user.shotbox_snap_positions}")
+def shotbox_snap_position(m) -> RelativeScreenPos:
+    return _snap_positions[m.shotbox_snap_positions]
+
+
 @mod.action_class
 class ShotBoxActions:
     def shotbox_activate():
@@ -857,3 +943,12 @@ class ShotBoxActions:
     def shotbox_screenshot_cycle_last():
         """Cycle to the last screenshot in the cache"""
         shotbox.screenshot_select(len(shotbox.screenshot_history) - 1)
+
+    def shotbox_snap_box(pos: RelativeScreenPos):
+        """Snap the box to a position on the screen"""
+        screen = ui.active_window().screen.visible_rect
+        screen_height = screen.height
+        shotbox.set_x(screen.x + (screen.width * pos.left))
+        shotbox.set_y(screen.y + (screen_height * pos.top))
+        shotbox.set_width(screen.width * (pos.right - pos.left))
+        shotbox.set_height(screen_height * (pos.bottom - pos.top))

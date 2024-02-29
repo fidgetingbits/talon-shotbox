@@ -81,6 +81,9 @@ cycle first:
 cycle last:
     user.shotbox_screenshot_cycle_last()
 
+snap <user.shotbox_snap_position>:
+    user.shotbox_snap_box(shotbox_snap_position)
+
 # Keyboard shortcuts for fine tuned tweaking if needed
 key(left):
     user.shotbox_move("left", 1)
