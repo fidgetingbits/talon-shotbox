@@ -4,10 +4,7 @@ A multi-platform voice controlled screenshot utility inspired by flameshot.
 
 ## Usage
 
-Say:
-    - `shotbox` to open the interface
-    - `shotbox off` to shut it off
-    - `take shot` to take a screenshot
+Say: - `shotbox` to open the interface - `shotbox off` to shut it off - `take shot` to take a screenshot
 
 There are a lot of different options and commands for this utility, so see the [USAGE.md](docs/USAGE.md) for complete details.
 
@@ -34,3 +31,4 @@ TBD
     - [ ] Make mouse snapping go to this center of the mouse?
     - [ ] Add snap functionality
     - [ ] Add mouse dragging?
+    - [ ] Make the command configurable in lists
